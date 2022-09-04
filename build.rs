@@ -155,6 +155,10 @@ fn cc_ad9361_library() {
         .define("malloc", Some("admalloc"))
         .define("calloc", Some("adcalloc"))
         .define("free", Some("adfree"))
+        // expose static functions
+        .define("static", Some(""))
+        // keep only inline functions as static linkage
+        .define("inline", Some("static"))
         .opt_level(0)
         // include
         .include(ad9361.join(""))

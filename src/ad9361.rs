@@ -8,7 +8,7 @@ use embedded_hal::{blocking, digital};
 use managed::ManagedSlice;
 use paste::paste;
 
-use crate::{bindings, fir::*, init, interop, types::*};
+use crate::{bindings, fir::*, gain_table::*, init, interop, types::*};
 
 /// An AD9361 RF PHY
 pub struct Ad9361<'a, SPI, DELAY, RESETB> {
@@ -330,6 +330,35 @@ impl<'a, SPI, DELAY, RESETB> Ad9361<'a, SPI, DELAY, RESETB> {
         let inner_ptr = self.inner;
         let status = unsafe {
             bindings::ad9361_spi_write((*inner_ptr).spi, address, value)
+        };
+        if status == 0 {
+            Ok(())
+        } else {
+            Err(status)
+        }
+    }
+}
+
+/// Gain table methods
+///
+impl<'a, SPI, DELAY, RESETB> Ad9361<'a, SPI, DELAY, RESETB> {
+    /// Set a new gain table
+    pub fn set_gain_table<'g: 's, 's>(
+        &'s mut self,
+        gain_table: &'g mut GainTable,
+    ) -> Result<(), i32> {
+        assert!(
+            !self.inner.is_null(),
+            "Must call init() method before accessing ad9361"
+        );
+        let inner_ptr = self.inner;
+        let status = unsafe {
+            // set new gt table
+            (*inner_ptr).gt_info = gain_table.set_ptr();
+            (*inner_ptr).current_table = 4_294_967_295;
+            // re-run setup
+            const RX1_RX2: u32 = 3; // both receivers
+            bindings::ad9361_load_gt(inner_ptr, 2_000_000_000, RX1_RX2)
         };
         if status == 0 {
             Ok(())
@@ -680,5 +709,41 @@ mod tests {
         ad9361
             .set_tx_rf_port_output(TxRfPortSelection::TXB)
             .expect("Failed to set tx port");
+    }
+
+    /// Set a Full Gain Table
+    #[test]
+    #[serial]
+    fn set_full_gain_table() {
+        let (parameters, spi, delay, resetb, heap) = test_setup();
+        let mut ad9361 = Ad9361::new(spi, delay, Some(resetb), heap);
+        ad9361.init(parameters).unwrap();
+        let mut gt =
+            GainTable::new_from_recommended(GainTableKind::Full, 2_000_000_000);
+
+        info!("");
+        info!("Set Full Gain Table");
+        ad9361
+            .set_gain_table(&mut gt)
+            .expect("Failed to set full gain table");
+    }
+
+    /// Set a Split Gain Table
+    #[test]
+    #[serial]
+    fn set_split_gain_table() {
+        let (parameters, spi, delay, resetb, heap) = test_setup();
+        let mut ad9361 = Ad9361::new(spi, delay, Some(resetb), heap);
+        ad9361.init(parameters).unwrap();
+        let mut gt = GainTable::new_from_recommended(
+            GainTableKind::Split,
+            2_000_000_000,
+        );
+
+        info!("");
+        info!("Set Split Gain Table");
+        ad9361
+            .set_gain_table(&mut gt)
+            .expect("Failed to set split gain table");
     }
 }

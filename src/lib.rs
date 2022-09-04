@@ -23,6 +23,23 @@
 //! }
 //! ```
 //!
+//! ## Split gain mode
+//!
+//! ```ignore
+//!     let mut ad9361 = ... // see example above
+//!     let mut parameters: Ad9361InitParam = Default::default();
+//!     parameters.set_gc_dig_gain_enable(1).set_split_gain_table_mode_enable(1);
+//!     ad9361.init(parameters).unwrap();
+//!
+//!     let mut gt = GainTable::new_from_recommended(
+//!         GainTableKind::Split,
+//!         2_000_000_000, // frequency (Hz), approximate
+//!     );
+//!
+//!     ad9361.set_gain_table(&mut gt).unwrap();
+//! }
+//! ```
+//!
 //! # `#[no_std]`
 //!
 //! To use the crate in a no-std enviroment, specify `default-features = false`
@@ -61,6 +78,7 @@ mod bindings;
 
 mod ad9361;
 mod fir;
+mod gain_table;
 mod init;
 mod interop;
 mod types;
@@ -85,5 +103,6 @@ compile_error!("Must select one and device flag");
 // Exports
 pub use ad9361::*;
 pub use fir::*;
+pub use gain_table::*;
 pub use init::Ad9361InitParam;
 pub use types::*;

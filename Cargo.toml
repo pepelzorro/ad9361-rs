@@ -44,6 +44,7 @@ log = { version = "0.4", default-features = false }
 managed = { version = "0.8", default-features = false }
 paste = "1.0"
 embedded-hal = "0.2"
+getset = "0.1.2"
 
 [build-dependencies]
 cc = { version = "1.0.73", features = ["parallel"] }

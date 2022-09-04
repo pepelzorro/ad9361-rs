@@ -78,7 +78,7 @@ impl From<RxRfPortSelection> for u32 {
 }
 
 /// Enable State Machine (ENSM) state.
-#[derive(Clone, Copy, PartialOrd, PartialEq, Debug)]
+#[derive(Clone, Copy, PartialOrd, PartialEq, Eq, Debug)]
 pub enum EnsmState {
     /// Clocks/BB PLL disabled OR Clocks enabled
     SleepOrWait = 0,
@@ -120,7 +120,7 @@ impl From<u8> for EnsmState {
 }
 
 /// Internal / External LO selection
-#[derive(Clone, Copy, PartialOrd, PartialEq, Debug)]
+#[derive(Clone, Copy, PartialOrd, PartialEq, Eq, Debug)]
 pub enum InternalExternalLO {
     Internal = 0,
     External = 1,
@@ -132,7 +132,7 @@ impl From<InternalExternalLO> for u8 {
 }
 
 /// Tx Local Oscillator power down
-#[derive(Clone, Copy, PartialOrd, PartialEq, Debug)]
+#[derive(Clone, Copy, PartialOrd, PartialEq, Eq, Debug)]
 pub enum LOPowerStatus {
     On = 0,
     Off = 1,
@@ -155,7 +155,7 @@ impl From<u8> for LOPowerStatus {
 }
 
 /// Built-In Self Test (BIST) mode
-#[derive(Clone, Copy, PartialOrd, PartialEq, Debug)]
+#[derive(Clone, Copy, PartialOrd, PartialEq, Eq, Debug)]
 pub enum BistMode {
     Disable = 0,
     InjectTx = 1,
@@ -205,7 +205,7 @@ impl From<i32> for LoopbackMode {
 }
 
 /// RF Gain Control Mode
-#[derive(Clone, Copy, PartialOrd, PartialEq, Debug)]
+#[derive(Clone, Copy, PartialOrd, PartialEq, Eq, Debug)]
 pub enum RfGainControlMode {
     Manual = 0,
     FastAttackAgc = 1,
