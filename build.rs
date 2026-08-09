@@ -1,12 +1,54 @@
 //! Build
 
-#[macro_use]
-extern crate error_chain;
-error_chain! {
-    foreign_links {
-        Io(::std::io::Error);
-        EnvVar(::std::env::VarError);
-        StringFromUtf8(::std::string::FromUtf8Error);
+use std::env;
+use std::fmt;
+use std::path::{Path, PathBuf};
+use std::process::Command;
+use std::time::Instant;
+
+type Result<T> = std::result::Result<T, Error>;
+
+#[derive(Debug)]
+enum Error {
+    Io(std::io::Error),
+    EnvVar(std::env::VarError),
+    StringFromUtf8(std::string::FromUtf8Error),
+}
+
+impl fmt::Display for Error {
+    fn fmt(&self, f: &mut fmt::Formatter) -> fmt::Result {
+        match self {
+            Error::Io(e) => write!(f, "{}", e),
+            Error::EnvVar(e) => write!(f, "{}", e),
+            Error::StringFromUtf8(e) => write!(f, "{}", e),
+        }
+    }
+}
+impl std::error::Error for Error {
+    fn source(&self) -> Option<&(dyn std::error::Error + 'static)> {
+        match self {
+            Error::Io(e) => Some(e),
+            Error::EnvVar(e) => Some(e),
+            Error::StringFromUtf8(e) => Some(e),
+        }
+    }
+}
+
+impl From<std::io::Error> for Error {
+    fn from(e: std::io::Error) -> Self {
+        Error::Io(e)
+    }
+}
+
+impl From<std::env::VarError> for Error {
+    fn from(e: std::env::VarError) -> Self {
+        Error::EnvVar(e)
+    }
+}
+
+impl From<std::string::FromUtf8Error> for Error {
+    fn from(e: std::string::FromUtf8Error) -> Self {
+        Error::StringFromUtf8(e)
     }
 }
 
@@ -19,11 +61,6 @@ macro_rules! truthy_cfg {
         }
     };
 }
-
-use std::env;
-use std::path::{Path, PathBuf};
-use std::process::Command;
-use std::time::Instant;
 
 fn manifest_dir() -> PathBuf {
     PathBuf::from(env::var("CARGO_MANIFEST_DIR").unwrap())
@@ -38,16 +75,13 @@ fn is_cross_compiling() -> Result<bool> {
 }
 
 fn get_command_result(command: &mut Command) -> Result<String> {
-    command
-        .output()
-        .chain_err(|| "Couldn't find target GCC executable.")
-        .and_then(|output| {
-            if output.status.success() {
-                Ok(String::from_utf8(output.stdout)?)
-            } else {
-                panic!("Couldn't read output from GCC.")
-            }
-        })
+    command.output().map_err(|e| e.into()).and_then(|output| {
+        if output.status.success() {
+            Ok(String::from_utf8(output.stdout)?)
+        } else {
+            panic!("Couldn't read output from GCC.")
+        }
+    })
 }
 
 trait CompilationBuilder {
