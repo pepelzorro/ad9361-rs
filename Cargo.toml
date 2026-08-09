@@ -1,6 +1,6 @@
 [package]
 name = "ad9361-rs"
-version = "0.1.0"
+version = "0.2.0"
 authors = ["Pep Zorro <pepelzorro@example.com>"]
 edition = "2021"
 categories = ["embedded", "hardware-support", "no-std"]
