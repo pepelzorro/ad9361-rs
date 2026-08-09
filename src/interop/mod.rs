@@ -241,13 +241,8 @@ pub extern "C" fn gpio_set_value(
         (f_ptr, slf)
     };
 
-    if (slf as *mut ()).is_null() {
-        trace!("set_value! {} = {} (unconnected)", descriptor.number, value);
-        0
-    } else {
-        trace!("set_value! {} = {}", descriptor.number, value);
-        f_ptr(slf, value)
-    }
+    trace!("set_value! {} = {}", descriptor.number, value);
+    f_ptr(slf, value)
 }
 
 /// int32_t gpio_get_value(struct gpio_desc *desc,

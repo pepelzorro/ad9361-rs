@@ -25,8 +25,20 @@
 //!
 //! ## Split gain mode
 //!
-//! ```ignore
-//!     let mut ad9361 = ... // see example above
+//! ```
+//! use ad9361_rs::{Ad9361, Ad9361InitParam, GainTable, GainTableKind};
+//! use embedded_hal::blocking::spi::Transfer;
+//! use embedded_hal::digital::v2::OutputPin;
+//! use embedded_hal::blocking::delay::{DelayMs, DelayUs};
+//!
+//! fn example(spi: impl Transfer<u8>,
+//!            delay: impl DelayMs<u32> + DelayUs<u32>,
+//!            reset_n: impl OutputPin)
+//! {
+//!     let parameters: Ad9361InitParam = Default::default();
+//!     let heap = Vec::with_capacity(540);
+//!
+//!     let mut ad9361 = Ad9361::new(spi, delay, Some(reset_n), heap); // ad9361 must not be moved after this point
 //!     let mut parameters: Ad9361InitParam = Default::default();
 //!     parameters.set_gc_dig_gain_enable(1).set_split_gain_table_mode_enable(1);
 //!     ad9361.init(parameters).unwrap();

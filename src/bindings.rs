@@ -4,6 +4,7 @@
     non_upper_case_globals,
     non_snake_case,
     deref_nullptr,
+    unnecessary_transmutes,
     clippy::all
 )]
 

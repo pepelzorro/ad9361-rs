@@ -270,8 +270,6 @@ fn bindgen_ad9361() {
         .default_enum_style(EnumVariation::Rust {
             non_exhaustive: false,
         })
-        .derive_partialeq(true)
-        .derive_eq(true)
         .header("csrc/ad9361_wrapper.h")
         .clang_arg("-I./no-os/drivers/rf-transceiver/ad9361/")
         .clang_arg("-I./no-os/include")

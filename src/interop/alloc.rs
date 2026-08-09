@@ -23,7 +23,7 @@ static mut HEAP_TOP: *mut u32 = ptr::null_mut();
 static mut HEAP_PREVIOUS: *mut u32 = ptr::null_mut();
 static mut HEAP_END: *mut u32 = ptr::null_mut();
 
-static mut SCRATCHPAD: MaybeUninit<[u8; 8]> = MaybeUninit::uninit();
+static mut SCRATCHPAD: MaybeUninit<[u32; 2]> = MaybeUninit::uninit();
 static mut SCRATCHPAD_ALLOCATED: u8 = 0;
 
 pub unsafe fn init_admalloc(heap_start: *mut u32, heap_len: usize) {
@@ -34,7 +34,7 @@ pub unsafe fn init_admalloc(heap_start: *mut u32, heap_len: usize) {
 }
 
 #[no_mangle]
-pub unsafe extern "C" fn admalloc(size: usize) -> *mut u32 {
+pub unsafe extern "C-unwind" fn admalloc(size: usize) -> *mut u32 {
     if size < 8 {
         // allocate from scratchpad
         debug_assert!(
@@ -42,7 +42,7 @@ pub unsafe extern "C" fn admalloc(size: usize) -> *mut u32 {
             "AD936x: attempt to double-allocate scratchpad"
         );
         SCRATCHPAD_ALLOCATED = 1;
-        SCRATCHPAD.as_mut_ptr() as *mut _
+        (&raw mut SCRATCHPAD).cast()
     } else {
         // allocate from heap
         assert!(!HEAP_TOP.is_null(), "AD936x: admalloc was not initialized");
@@ -61,17 +61,20 @@ pub unsafe extern "C" fn admalloc(size: usize) -> *mut u32 {
     }
 }
 #[no_mangle]
-pub unsafe extern "C" fn adcalloc(nmemb: usize, size: usize) -> *mut u32 {
+pub unsafe extern "C-unwind" fn adcalloc(
+    nmemb: usize,
+    size: usize,
+) -> *mut u32 {
     let mem = admalloc(nmemb * size);
 
     ptr::write_bytes(mem, 0, nmemb * size);
     mem
 }
 #[no_mangle]
-pub unsafe extern "C" fn adfree(ptr: *mut u32) {
+pub unsafe extern "C-unwind" fn adfree(ptr: *mut u32) {
     if ptr.is_null() {
         warn!("AD936x: Tried to free null pointer");
-    } else if ptr == SCRATCHPAD.as_mut_ptr() as *mut _ {
+    } else if ptr.addr() == (&raw mut SCRATCHPAD).addr() {
         SCRATCHPAD_ALLOCATED = 0;
     } else if ptr == HEAP_START {
         // deallocate everything
